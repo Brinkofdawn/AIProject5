@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="f118604a-7abe-4e1a-8bae-efbdd8cf4627" name="Default" comment="" />
+    <list default="true" id="f118604a-7abe-4e1a-8bae-efbdd8cf4627" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+    </list>
     <ignored path="AIProject5.iws" />
     <ignored path=".idea/workspace.xml" />
     <ignored path="$PROJECT_DIR$/out/" />
@@ -96,8 +98,8 @@
       <file leaf-file-name="CSP.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/andonti_ajdooner_project5/CSP.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state vertical-scroll-proportion="0.24558587">
-              <caret line="142" column="25" selection-start-line="142" selection-start-column="25" selection-end-line="142" selection-end-column="25" />
+            <state vertical-scroll-proportion="0.5321027">
+              <caret line="163" column="62" selection-start-line="163" selection-start-column="62" selection-end-line="163" selection-end-column="62" />
               <folding>
                 <element signature="imports" expanded="true" />
               </folding>
@@ -684,15 +686,15 @@
       <option name="number" value="Default" />
       <updated>1455741162182</updated>
       <workItem from="1455741184478" duration="17914000" />
-      <workItem from="1455836003228" duration="695000" />
+      <workItem from="1455836003228" duration="1458000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="18609000" />
+    <option name="totallyTimeSpent" value="19372000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="1481" y="69" width="1734" height="1407" extended-state="0" />
+    <frame x="1481" y="69" width="1734" height="1407" extended-state="1" />
     <editor active="false" />
     <layout>
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -1050,8 +1052,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/andonti_ajdooner_project5/CSP.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state vertical-scroll-proportion="0.24558587">
-          <caret line="142" column="25" selection-start-line="142" selection-start-column="25" selection-end-line="142" selection-end-column="25" />
+        <state vertical-scroll-proportion="0.5321027">
+          <caret line="163" column="62" selection-start-line="163" selection-start-column="62" selection-end-line="163" selection-end-column="62" />
           <folding>
             <element signature="imports" expanded="true" />
           </folding>
