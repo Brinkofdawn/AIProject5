@@ -11,16 +11,25 @@ public class Variables {
     private int weight;
 
 
-    boolean mutualInclusiveCheck = false;
-    boolean unaryInclusiveCheck = false;
-    boolean unaryExclusiveCheck = false;
-    boolean binaryEqualsCheck = false;
-    boolean binaryNotEqualsCheck = false;
+    private boolean mutualInclusiveCheck = false;
+    private boolean unaryInclusiveCheck = false;
+    private boolean unaryExclusiveCheck = false;
+    private boolean binaryEqualsCheck = false;
+    private boolean binaryNotEqualsCheck = false;
+    boolean Assigned= false;
     private List<Mutualinclusive> mutualInclusive = new LinkedList<Mutualinclusive>();
     private List<String> unaryInclusive = new LinkedList<String>();
     private List<String> unaryExclusive = new LinkedList<String>();
     private List<String> binaryEquals = new LinkedList<String>();
     private List<String> binaryNotEquals = new LinkedList<String>();
+
+    public boolean isAssigned() {
+        return Assigned;
+    }
+
+    public void Assign() {
+        Assigned = true;
+    }
 
     public List<Mutualinclusive> getMutualInclusive() {
         return mutualInclusive;
