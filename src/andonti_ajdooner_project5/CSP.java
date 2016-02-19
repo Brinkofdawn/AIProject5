@@ -6,14 +6,17 @@ import java.util.*;
  * Created by Arun on 2/17/2016.
  */
 public class CSP {
+    List<Variables> Items = new LinkedList<Variables>();
+    List<Domain> Bags = new LinkedList<Domain>();
+    List<Variables> tempVariables = new LinkedList<Variables>();
+    List<Domain> tempBags = new LinkedList<Domain>();
 
+    int bagMin = -1;
+    int bagMax = -1;
     public void readInput(String inFile) {
         BufferedReader br = null;
         String line;
-        List<Variables> Items = new LinkedList<Variables>();
-        List<Domain> Bags = new LinkedList<Domain>();
-        int bagMin = -1;
-        int bagMax = -1;
+
 
         try {
             br = new BufferedReader(new FileReader(inFile));
@@ -175,7 +178,7 @@ public class CSP {
         System.out.println(bagMax);
         System.out.println(" UNARY INCLUSIVE ");
         for (int p = 0; p < Items.size(); p++){
-            if(Items.get(p).unaryInclusiveCheck) {
+            if(Items.get(p).isUnaryInclusiveCheck()) {
                 System.out.println("");
                 System.out.print(Items.get(p).getName());
                 for(int i = 0; i<Items.get(p).getUnaryInclusive().size(); i++)
@@ -187,7 +190,7 @@ public class CSP {
         System.out.println(" UNARY EXCLUSIVE ");
 
         for (int p = 0; p < Items.size(); p++){
-            if(Items.get(p).unaryExclusiveCheck) {
+            if(Items.get(p).isUnaryExclusiveCheck()) {
                 System.out.println("");
                 System.out.print(Items.get(p).getName());
                 for(int i = 0; i<Items.get(p).getUnaryExclusive().size(); i++)
@@ -199,7 +202,7 @@ public class CSP {
         System.out.println(" Binary Equals ");
 
         for (int p = 0; p < Items.size(); p++){
-            if(Items.get(p).binaryEqualsCheck) {
+            if(Items.get(p).isBinaryEqualsCheck()) {
                 System.out.println("");
                 System.out.print(Items.get(p).getName());
                 for(int i = 0; i<Items.get(p).getBinaryEquals().size(); i++)
@@ -212,7 +215,7 @@ public class CSP {
         System.out.println(" Binary Not Equals ");
 
         for (int p = 0; p < Items.size(); p++){
-            if(Items.get(p).binaryNotEqualsCheck) {
+            if(Items.get(p).isBinaryNotEqualsCheck()) {
                 System.out.println("");
                 System.out.print(Items.get(p).getName());
                 for(int i = 0; i<Items.get(p).getBinaryNotEquals().size(); i++)
@@ -225,7 +228,7 @@ public class CSP {
         System.out.println(" Mutual Inclusive ");
 
         for (int p = 0; p < Items.size(); p++){
-            if(Items.get(p).mutualInclusiveCheck) {
+            if(Items.get(p).isMutualInclusiveCheck()) {
                 System.out.println("");
                 for (int i = 0; i < Items.get(p).getMutualInclusive().size(); i++) {
                     System.out.print(Items.get(p).getName());
@@ -236,5 +239,95 @@ public class CSP {
 
         }
 
+    }
+
+// maybe this needs to be slightly edited for different algorithms
+    public boolean canAdd(int weight, int itemAmount, Domain bag, Variables item){
+        // if we can add to the bag before checking any binary constraints
+        //Is it already assigned?
+        if(item.isAssigned()){
+            return false;
+        }
+
+        if(itemAmount >=  bagMax){
+            return false;
+        }
+
+        if(weight + item.getWeight() >= bag.getCapacity()){
+            return false;
+        }
+
+        if(item.isUnaryInclusiveCheck()){
+            if(item.getUnaryInclusive().contains(bag.getName()) == false){
+                return false;
+            }
+        }
+
+        if(item.isUnaryExclusiveCheck()){
+            if(item.getUnaryExclusive().contains(bag.getName())){
+                return false;
+            }
+        }
+
+        // if it gets past these first checks now have to check with binary
+
+        if(item.isBinaryEqualsCheck()){
+            for (int i = 0; i < item.getBinaryEquals().size(); i++){
+                for (int j = 0; j < Items.size(); j++){
+                    if(Items.get(j).getName().equals(item.getBinaryEquals().get(i))){
+                        if(bag.getStoredItems().contains(j)){
+
+                        }
+                        else if(canAdd(weight + item.getWeight(), itemAmount +1, bag,Items.get(j)) == false){
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        if(item.isBinaryNotEqualsCheck()){
+            for (int i = 0; i < item.getBinaryNotEquals().size(); i++){
+                for (int j = 0; j < Items.size(); j++){
+                    if(Items.get(j).getName().equals(item.getBinaryNotEquals().get(i))){
+                        if(bag.getStoredItems().contains(j)){
+                            return false;
+                        }
+                    }
+                }
+            }
+        }
+
+        for(int i = 0; i < item.getMutualInclusive().size(); i++){
+            if(item.getMutualInclusive().get(i).ifThisBag.equals(bag.getName())){
+                int it = 0;
+                int ba = 0;
+                for (int j = 0; j < Items.size(); j++){
+                    if(Items.get(j).getName().equals(item.getMutualInclusive().get(i).thenThatItem)){
+                        it = j;
+                    }
+                }
+                for (int j = 0; j < Bags.size(); j++){
+                    if(Bags.get(j).getName().equals(item.getMutualInclusive().get(i).inThatBag)){
+                        ba = j;
+                    }
+                }
+                for (int j = 0; j < Items.size(); j++){
+                    if(Items.get(j).getName().equals(item.getMutualInclusive().get(i).thenThatItem)){
+                        it = j;
+                    }
+                }
+                if(Bags.get(ba).getStoredItems().contains(Items.get(it))){
+
+                }
+                else if(canAdd(weight + item.getWeight(), itemAmount + 1, Bags.get(ba),Items.get(it)) == false){
+                    return false;
+                }
+            }
+        }
+        tempVariables.add(item); //Add item to list of temporarily added things
+        bag.addItemToBag(item); //Add items to list of bags
+        tempBags.add(bag);
+        return true;
     }
 }
