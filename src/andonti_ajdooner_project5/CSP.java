@@ -1,4 +1,6 @@
 package andonti_ajdooner_project5;
+import com.sun.org.apache.xpath.internal.operations.Variable;
+
 import java.io.*;
 import java.util.*;
 
@@ -10,6 +12,7 @@ public class CSP {
     List<Domain> Bags = new LinkedList<Domain>();
     List<Variables> tempVariables = new LinkedList<Variables>();
     List<Domain> tempBags = new LinkedList<Domain>();
+
 
     int bagMin = -1;
     int bagMax = -1;
@@ -164,6 +167,8 @@ public class CSP {
             }
         }
 
+
+        /*
         //cehcking to make sure everything is stored correctly
         System.out.println(" ITEMS ");
         for (int p = 0; p < Items.size(); p++){
@@ -238,11 +243,14 @@ public class CSP {
             }
 
         }
+        */
+
+        backtrackForward();
 
     }
 
 // maybe this needs to be slightly edited for different algorithms
-    public boolean canAdd(int weight, int itemAmount, Domain bag, Variables item){
+    public boolean canAdd(int weight, int itemAmount, Domain bag, Variables item, boolean check){
         // if we can add to the bag before checking any binary constraints
         //Is it already assigned?
         if(item.isAssigned()){
@@ -278,7 +286,7 @@ public class CSP {
                         if(bag.getStoredItems().contains(j)){
 
                         }
-                        else if(canAdd(weight + item.getWeight(), itemAmount +1, bag,Items.get(j)) == false){
+                        else if(canAdd(weight + item.getWeight(), itemAmount +1, bag,Items.get(j), check) == false){
                             return false;
                         }
                     }
@@ -320,14 +328,154 @@ public class CSP {
                 if(Bags.get(ba).getStoredItems().contains(Items.get(it))){
 
                 }
-                else if(canAdd(weight + item.getWeight(), itemAmount + 1, Bags.get(ba),Items.get(it)) == false){
+                else if(canAdd(weight + item.getWeight(), itemAmount + 1, Bags.get(ba),Items.get(it), check) == false){
                     return false;
                 }
             }
         }
-        tempVariables.add(item); //Add item to list of temporarily added things
+
+        if(check) {
+            tempVariables.add(item); //Add item to list of temporarily added things
+        }
         bag.addItemToBag(item); //Add items to list of bags
-        tempBags.add(bag);
+
+        if(check) {
+            tempBags.add(bag);
+        }
+        item.Assign();
+        System.out.println("True");
         return true;
+    }
+
+    public void clearCheckingBags(){
+        for(int i = 0; i < tempVariables.size(); i++){
+            for(int j = 0; j < tempBags.size(); j++){
+                if(tempBags.get(j).getStoredItems().contains(tempVariables.get(i))){
+                    tempVariables.get(i).deAssign();
+                    tempBags.get(j).removeFromBag(tempVariables.get(i));
+
+                }
+            }
+        }
+
+        tempVariables.clear();
+        tempBags.clear();
+    }
+
+    public LinkedList<Domain> getPossibleBags(Variables item){
+        LinkedList<Domain> tempList = new LinkedList<Domain>();
+        for(int i = 0; i < Bags.size(); i++){
+            Domain tempBag= Bags.get(i);
+            if(canAdd(tempBag.getTotalWeight(),tempBag.getTotalItems(),tempBag,item,true)){
+                clearCheckingBags();
+                tempList.add(tempBag);
+            }
+            else{
+                clearCheckingBags();
+            }
+        }
+        return tempList;
+    }
+
+    // need to change this later to not just return first unassigned
+    public Variables minimumRemainingValues(){
+
+        for(int i = 0; i < Items.size(); i++ ){
+            if(Items.get(i).isAssigned() == false){
+                return Items.get(i);
+            }
+        }
+
+        return null;
+    }
+
+    public LinkedList<Domain> minBag(LinkedList<Domain> bagList) {
+        LinkedList<Domain> orderedBags = bagList;
+        Collections.sort(orderedBags);
+        return orderedBags;
+    }
+
+    // checking to see if the assignment fits end constraints
+    public boolean overMinItems(){
+        for(int i = 0; i < Bags.size(); i++){
+            // checking to see if it meets the min items and min weight requirement
+            if(Bags.get(i).getTotalItems() < bagMin || Bags.get(i).getTotalWeight() < 0.9 * Bags.get(i).getCapacity()){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public boolean noUnassignedItems(){
+        for (int i = 0; i < Items.size(); i++){
+            if(Items.get(i).isAssigned() == false){
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // returns true if all requirements are met, returns false otherwise
+    public boolean isComplete(){
+        //boolean isValid
+        boolean minLimit = overMinItems();
+        boolean noUnassignedItems = noUnassignedItems();
+        return minLimit && noUnassignedItems;
+    }
+
+
+    public void printOutput(){
+        for (int i =0; i<Bags.size(); i++){
+            System.out.print(Bags.get(i).getName());
+            for (int j =0; j< Bags.get(i).getStoredItems().size(); j++){
+                System.out.print(" "+Bags.get(i).getStoredItems().get(j).getName());
+            }
+            System.out.println();
+            System.out.println("number of items: " + Bags.get(i).getTotalItems());
+            System.out.println("total weight: " + Bags.get(i).getTotalWeight() + "/" + Bags.get(i).getCapacity());
+            int waste = -(Bags.get(i).getTotalWeight()- Bags.get(i).getCapacity());
+            System.out.println("wasted capacity: " + waste );
+
+        }
+    }
+
+    public LinkedList<Domain> backtrackForward() {
+
+           Variables i = minimumRemainingValues();
+        //using this for now
+        if(i == null) {
+            return new LinkedList<Domain>();
+        }
+        // Prune bags that are not valid
+        LinkedList<Domain> possibleBags = getPossibleBags(i);
+
+        // Order bags so that the least constraining bags are first
+        LinkedList<Domain> orderedBags = minBag(possibleBags);
+
+
+        for(int j = 0; j < orderedBags.size(); j++) {
+
+            if(canAdd(orderedBags.get(j).getTotalWeight(),orderedBags.get(j).getTotalItems(),orderedBags.get(j),i,true)) {
+                clearCheckingBags();
+                orderedBags.get(j).addItemToBag(i);
+                // Recursive call
+                LinkedList<Domain> results = backtrackForward();
+
+                if(results == null) {
+                   orderedBags.get(j).removeFromBag(i);
+                }
+            }
+            else {
+                clearCheckingBags();
+            }
+        }
+            System.out.print("wtf");
+        if(isComplete()) {
+            printOutput();
+            return (LinkedList<Domain>) Bags;
+        }
+
+        return null;
     }
 }

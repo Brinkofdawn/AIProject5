@@ -6,7 +6,7 @@ import java.util.LinkedList;
 /**
  * Created by Arun on 2/17/2016.
  */
-public class Domain {
+public class Domain implements Comparable<Domain>{
     private String name;
     private int capacity;
     private int totalWeight = 0;
@@ -42,6 +42,7 @@ public class Domain {
         return totalItems;
     }
 
+
     public List<Variables> getStoredItems() {
         return storedItems;
     }
@@ -51,7 +52,20 @@ public class Domain {
         boolean temp = storedItems.remove(item);
         if (temp){
             totalItems--;
+            totalWeight = totalWeight - item.getWeight();
         }
         return temp;
+    }
+    public int compareTo(Domain b2) {
+        int b1A = this.getCapacity() - this.getTotalWeight();
+        int b2A = b2.getCapacity() - b2.getTotalWeight();
+        if(b1A > b2A) {
+            return -1;
+        }
+        else if(b1A < b2A) {
+            return 1;
+        }
+        else
+            return 0;
     }
 }

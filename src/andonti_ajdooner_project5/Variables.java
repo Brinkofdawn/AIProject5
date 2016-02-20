@@ -30,6 +30,9 @@ public class Variables {
     public void Assign() {
         Assigned = true;
     }
+    public void deAssign() {
+        Assigned = false;
+    }
 
     public List<Mutualinclusive> getMutualInclusive() {
         return mutualInclusive;
