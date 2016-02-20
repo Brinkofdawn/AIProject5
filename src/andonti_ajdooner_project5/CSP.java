@@ -389,6 +389,7 @@ public class CSP {
         return null;
     }
 
+    // sorting the bags by capacity constraint
     public LinkedList<Domain> minBag(LinkedList<Domain> bagList) {
         LinkedList<Domain> orderedBags = bagList;
         Collections.sort(orderedBags);
@@ -421,10 +422,11 @@ public class CSP {
         //boolean isValid
         boolean minLimit = overMinItems();
         boolean noUnassignedItems = noUnassignedItems();
+        //return true;
         return minLimit && noUnassignedItems;
     }
 
-
+// print the correct output if we find an answer
     public void printOutput(){
         for (int i =0; i<Bags.size(); i++){
             System.out.print(Bags.get(i).getName());
@@ -440,10 +442,11 @@ public class CSP {
         }
     }
 
+    // we might need another validity checking function in order for this to work, this could also be written wrong
     public LinkedList<Domain> backtrackForward() {
-
+//using this for now need to change to better heuristic
            Variables i = minimumRemainingValues();
-        //using this for now
+
         if(i == null) {
             return new LinkedList<Domain>();
         }
@@ -453,24 +456,26 @@ public class CSP {
         // Order bags so that the least constraining bags are first
         LinkedList<Domain> orderedBags = minBag(possibleBags);
 
-
+        // iterating over list of possible bags
         for(int j = 0; j < orderedBags.size(); j++) {
 
+
             if(canAdd(orderedBags.get(j).getTotalWeight(),orderedBags.get(j).getTotalItems(),orderedBags.get(j),i,true)) {
-                clearCheckingBags();
-                orderedBags.get(j).addItemToBag(i);
+                //clearCheckingBags();
+                //orderedBags.get(j).addItemToBag(i);
+                //i.Assign();
                 // Recursive call
                 LinkedList<Domain> results = backtrackForward();
 
                 if(results == null) {
-                   orderedBags.get(j).removeFromBag(i);
+                    clearCheckingBags();
                 }
             }
             else {
                 clearCheckingBags();
             }
         }
-            System.out.print("wtf");
+            //System.out.print("wtf");
         if(isComplete()) {
             printOutput();
             return (LinkedList<Domain>) Bags;
