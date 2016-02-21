@@ -7,6 +7,8 @@ import java.util.List;
  * Created by Arthur on 2/20/2016.
  */
 
+/*
+
 public class tempClass {
     public LinkedList<Variables> validityCheck(Domain bag, Variables item, int itemAmount, List<Variables> allVariables, LinkedList<Domain> allBags, LinkedList<Variables> addedAlready) {
         LinkedList<Variables> tempLinkedList = new LinkedList<Variables>();
@@ -123,3 +125,4 @@ public class tempClass {
         return tempLinkedList;
     }
 }
+*/

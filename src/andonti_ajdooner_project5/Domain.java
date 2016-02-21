@@ -72,7 +72,6 @@ public class Domain implements Comparable<Domain>{
         Domain bagCopy = new Domain(name, capacity);
         for(Variables i : storedItems){
             bagCopy.addItemToBag(i.duplicateItem());
-            totalItems++;
         }
         return bagCopy;
     }

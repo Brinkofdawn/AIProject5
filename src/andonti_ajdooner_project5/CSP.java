@@ -14,9 +14,9 @@ public class CSP {
     List<Domain> tempBags = new LinkedList<Domain>();
 
 
-    boolean DEBUG = true;
-    int bagMin = -1;
-    int bagMax = -1;
+    boolean DEBUG = false;
+    int bagMin = 0;
+    int bagMax = Integer.MAX_VALUE;
     public void readInput(String inFile) {
         BufferedReader br = null;
         String line;
@@ -297,9 +297,15 @@ public class CSP {
                             temp = false;
                         }
                         if (temp) {
-                            boolean result = tempLinkedList.addAll(validityCheck(bag, allVariables.get(j), itemAmount + 1, allVariables, allBags, addedAlready)); //Add all elements it creates
-                            if(!result) { //It actually failed
-                                System.out.println("A binary equals condition is present between " + item.getName() + " and " + allVariables.get(j) + ". However, there is not enough space to accommodate both.");
+                            List<Variables> tmp = new LinkedList<Variables>();
+                            tmp = validityCheck(bag, allVariables.get(j), itemAmount + 1, allVariables, allBags, addedAlready); //Add all elements it creates
+
+                            if(tmp != null) { //It actually failed
+                                tempLinkedList.addAll(tmp);
+                            }
+
+                            else{
+                                System.out.println("A binary equals condition is present between " + item.getName() + " and " + allVariables.get(j).getName() + ". However, there is not enough space to accommodate both.");
                                 bag.removeFromBag(item);
                                 item.deAssign();
                                 return null;
@@ -316,7 +322,7 @@ public class CSP {
                 for (int j = 0; j < allVariables.size(); j++){ //Iterate over the variables present
                     if(allVariables.get(j).getName().equals(item.getBinaryNotEquals().get(i))){ //Get the binary not equal
                         if(bag.getStoredItems().contains(allVariables.get(j))){
-                            System.out.println("A binary not equals condition is present between " + item.getName() + " and " + allVariables.get(j) + ". However, the latter is already in the bag.");
+                            System.out.println("A binary not equals condition is present between " + item.getName() + " and " + allVariables.get(j).getName() + ". However, the latter is already in the bag.");
                             bag.removeFromBag(item);
                             item.deAssign();
                             return null;
@@ -361,7 +367,7 @@ public class CSP {
                 }
             }
         }
-
+        //System.out.println("I'm not giving null");
         return tempLinkedList;
     }
 
@@ -381,6 +387,7 @@ public class CSP {
         return tempBags;
     }
 
+    // maybe not needed anymore?
     public void clearCheckingBags(){
         for (int i = 0; i < tempVariables.size(); i++){
             for (int j = 0; j < tempBags.size(); j++){
@@ -399,17 +406,20 @@ public class CSP {
         LinkedList<Domain> tempList = new LinkedList<Domain>();
         LinkedList<Variables> dupItems;
         LinkedList<Domain> dupBags;
+        int index = Items.indexOf(item);
         for (int i = 0; i < Bags.size(); i++){
-            Domain tempBag = Bags.get(i);
             List<Variables> allVariables = duplicateListOfVariables(Items);
             List<Domain> allBags = duplicateListOfBags(Bags);
+            Domain tempBag = allBags.get(i);
             List<Variables> tempVars = new LinkedList<Variables>();
-            if (validityCheck(tempBag, item, 1, allVariables, allBags, tempVars) != null){ //Is this right?
-                clearCheckingBags();
+            if (validityCheck(tempBag, allVariables.get(index), tempBag.getTotalItems(), allVariables, allBags, tempVars) != null){ //Is this right?
+                //clearCheckingBags();
+                //System.out.println(Bags.get(i).getTotalItems());
                 tempList.add(tempBag);
+                System.out.println(tempBag.getName());
             }
             else{
-                clearCheckingBags();
+                //clearCheckingBags();
             }
         }
         return tempList;
@@ -419,7 +429,7 @@ public class CSP {
     public Variables minimumRemainingValues(){
 
         for(int i = 0; i < Items.size(); i++ ){
-            if(Items.get(i).isAssigned() == false){
+            if(!(Items.get(i).isAssigned())){
                 return Items.get(i);
             }
         }
@@ -429,29 +439,36 @@ public class CSP {
 
     // sorting the bags by capacity constraint
     public LinkedList<Domain> minBag(LinkedList<Domain> bagList) {
-        LinkedList<Domain> orderedBags = bagList;
+        List<Domain> orderedBags = duplicateListOfBags(Bags);
         Collections.sort(orderedBags);
-        return orderedBags;
+        return (LinkedList<Domain>) orderedBags;
     }
 
     // checking to see if the assignment fits end constraints
     public boolean overMinItems(){
         for(int i = 0; i < Bags.size(); i++){
             // checking to see if it meets the min items and min weight requirement
+            for(int j = 0; j < Bags.get(i).getTotalItems(); j++) {
+//                System.out.println(Bags.get(i).getStoredItems().get(j).getName());
+            }
             if(Bags.get(i).getTotalItems() < bagMin || Bags.get(i).getTotalWeight() < 0.9 * Bags.get(i).getCapacity()){
+                System.out.println("does not meet");
                 return false;
             }
         }
+        System.out.println("meets");
         return true;
     }
 
     public boolean noUnassignedItems(){
         for (int i = 0; i < Items.size(); i++){
-            if(Items.get(i).isAssigned() == false){
+            if(!(Items.get(i).isAssigned())){
+                System.out.println("Not all assigned");
+
                 return false;
             }
         }
-
+        System.out.println("All items assigned");
         return true;
     }
 
@@ -484,32 +501,48 @@ public class CSP {
     //Problem is that if something doesn't work, it only removes one thing
     public LinkedList<Domain> backtrackForward() {
         //using this for now need to change to better heuristic
+
         Variables i = minimumRemainingValues();
 
         if(i == null) {
             return new LinkedList<Domain>();
         }
         // Prune bags that are not valid
+       // System.out.println(Bags.get(0).getTotalItems());
         LinkedList<Domain> possibleBags = getPossibleBags(i);
-
         // Order bags so that the least constraining bags are first
         LinkedList<Domain> orderedBags = minBag(possibleBags);
 
+
+
+
         // iterating over list of possible bags
         for(int j = 0; j < orderedBags.size(); j++) {
-            if(validityCheck(orderedBags.get(j), orderedBags.get(j).getTotalWeight(),orderedBags.get(j).getTotalItems(),orderedBags.get(j),i,false)) {//Fix this
-                //clearCheckingBags();
-                //orderedBags.get(j).addItemToBag(i);
-                //i.Assign();
-                // Recursive call
+            //System.out.println(Bags.get(j).getTotalItems());
+            List<Variables> allVariables = duplicateListOfVariables(Items);
+           // System.out.println(Bags.get(j).getTotalItems());
+            List<Domain> allBags = duplicateListOfBags(Bags);
+           // System.out.println(Bags.get(j).getTotalItems());
+            List<Variables> tempVars = new LinkedList<Variables>();
+
+            //System.out.println(Bags.get(j).getTotalItems());
+            //i.Assign();
+
+            if(validityCheck(orderedBags.get(j),i,orderedBags.get(j).getTotalItems(),allVariables,allBags,tempVars) != null) {//Fix this
+                Bags.get(j).addItemToBag(i);
+                i.Assign();
                 LinkedList<Domain> results = backtrackForward();
 
                 if(results == null) { //Improper results
-                    clearCheckingBags();
+                    Bags.get(j).removeFromBag(i);
+                  //  System.out.println(Bags.get(j).getTotalItems());
+                    i.deAssign();
                 }
             }
             else { //Improper results
-                clearCheckingBags();
+                Bags.get(j).removeFromBag(i);
+                //System.out.println(Bags.get(j).getTotalItems());
+                i.deAssign();
             }
         }
             //System.out.print("wtf");
