@@ -9,20 +9,54 @@ import java.util.List;
 public class Variables {
     private String name;
     private int weight;
-
-
     private boolean mutualInclusiveCheck = false;
     private boolean unaryInclusiveCheck = false;
     private boolean unaryExclusiveCheck = false;
     private boolean binaryEqualsCheck = false;
     private boolean binaryNotEqualsCheck = false;
-    boolean Assigned= false;
+    private boolean Assigned = false;
     private List<Mutualinclusive> mutualInclusive = new LinkedList<Mutualinclusive>();
     private List<String> unaryInclusive = new LinkedList<String>();
     private List<String> unaryExclusive = new LinkedList<String>();
     private List<String> binaryEquals = new LinkedList<String>();
     private List<String> binaryNotEquals = new LinkedList<String>();
 
+    public Variables(String name, int weight){
+        this.name = name;
+        this.weight = weight;
+    }
+    public Variables duplicateItem(){
+        Variables itemCopy = new Variables(name, weight);
+        if (isAssigned()) {
+            itemCopy.Assign();
+        }
+        if (mutualInclusiveCheck) {
+            for (Mutualinclusive i : mutualInclusive) {
+                itemCopy.addMutualInclusive(i);
+            }
+        }
+        if (unaryInclusiveCheck) {
+            for (String j : unaryInclusive) {
+                itemCopy.addUnaryInclusive(j);
+            }
+        }
+        if (unaryExclusiveCheck) {
+            for (String k : unaryExclusive) {
+                itemCopy.addUnaryExclusive(k);
+            }
+        }
+        if (binaryEqualsCheck) {
+            for (String l : binaryEquals) {
+                itemCopy.addBinaryEquals(l);
+            }
+        }
+        if (binaryNotEqualsCheck) {
+            for (String m : binaryNotEquals) {
+                itemCopy.addBinaryNotEquals(m);
+            }
+        }
+        return itemCopy;
+    }
     public boolean isAssigned() {
         return Assigned;
     }
@@ -70,11 +104,6 @@ public class Variables {
 
     public List<String> getBinaryNotEquals() {
         return binaryNotEquals;
-    }
-
-    public Variables(String name, int weight){
-        this.name = name;
-        this.weight = weight;
     }
 
     public String getName() {

@@ -31,7 +31,6 @@ public class Domain implements Comparable<Domain>{
             storedItems.add(item);
             totalWeight += item.getWeight();
             totalItems++;
-
     }
 
     public int getTotalWeight() {
@@ -48,7 +47,6 @@ public class Domain implements Comparable<Domain>{
     }
 
     public boolean removeFromBag(Variables item) {
-
         boolean temp = storedItems.remove(item);
         if (temp){
             totalItems--;
@@ -56,6 +54,7 @@ public class Domain implements Comparable<Domain>{
         }
         return temp;
     }
+
     public int compareTo(Domain b2) {
         int b1A = this.getCapacity() - this.getTotalWeight();
         int b2A = b2.getCapacity() - b2.getTotalWeight();
@@ -67,5 +66,14 @@ public class Domain implements Comparable<Domain>{
         }
         else
             return 0;
+    }
+    //Duplicate everything by value
+    public Domain duplicateBag(){
+        Domain bagCopy = new Domain(name, capacity);
+        for(Variables i : storedItems){
+            bagCopy.addItemToBag(i.duplicateItem());
+            totalItems++;
+        }
+        return bagCopy;
     }
 }

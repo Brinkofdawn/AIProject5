@@ -14,6 +14,7 @@ public class CSP {
     List<Domain> tempBags = new LinkedList<Domain>();
 
 
+    boolean DEBUG = true;
     int bagMin = -1;
     int bagMax = -1;
     public void readInput(String inFile) {
@@ -249,111 +250,143 @@ public class CSP {
 
     }
 
-// maybe this needs to be slightly edited for different algorithms
-    public boolean canAdd(int weight, int itemAmount, Domain bag, Variables item, boolean check){
-        // if we can add to the bag before checking any binary constraints
-        //Is it already assigned?
-        if(item.isAssigned()){
-            return false;
+    public LinkedList<Variables> validityCheck(Domain bag, Variables item, int itemAmount, List<Variables> allVariables, List<Domain> allBags, List<Variables> addedAlready) {
+        LinkedList<Variables> tempLinkedList = new LinkedList<Variables>();
+        tempLinkedList.add(item);
+
+        if (item.isAssigned() && !bag.getStoredItems().contains(item)) { //In case it's already assigned and not in the bag we're looking to put it in
+            return null;
         }
 
-        if(itemAmount >=  bagMax){
-            return false;
+        if ((bag.getCapacity() - bag.getTotalWeight()) < item.getWeight()) { //If the item's weight is larger than what's left in the bag we want to put it in
+            return null;
+        }
+        if (itemAmount >= bagMax) {
+            if (DEBUG) {
+                System.out.println("Total item amount exceeds bagMax of " + bagMax + ". Cannot include " + item.getName() + ".");
+            }
+            return null;
         }
 
-        if(weight + item.getWeight() >= bag.getCapacity()){
-            return false;
-        }
-
-        if(item.isUnaryInclusiveCheck()){
-            if(item.getUnaryInclusive().contains(bag.getName()) == false){
-                return false;
+        if (item.isUnaryInclusiveCheck()) { //There are only certain bags this item can be in
+            if (!item.getUnaryInclusive().contains(bag.getName())) { //If this bag is not one of them
+                if (DEBUG){
+                    System.out.println("Unary inclusive requirement for " + item.getName()+". Bag " + bag.getName() + " is not included in this requirement.");
+                }
+                return null;
             }
         }
 
-        if(item.isUnaryExclusiveCheck()){
-            if(item.getUnaryExclusive().contains(bag.getName())){
-                return false;
+        if (item.isUnaryExclusiveCheck()) { //There are certain bags it can't be in
+            if (item.getUnaryExclusive().contains(bag.getName())){ //This is one of them
+                if (DEBUG) {
+                    System.out.println("Unary exclusive requirement for " + item.getName()+". Bag " + bag.getName() + " is included in this requirement.");
+                }
+                return null;
             }
         }
-
-        // if it gets past these first checks now have to check with binary
-
-        if(item.isBinaryEqualsCheck()){
-            for (int i = 0; i < item.getBinaryEquals().size(); i++){
-                for (int j = 0; j < Items.size(); j++){
-                    if(Items.get(j).getName().equals(item.getBinaryEquals().get(i))){
-                        if(bag.getStoredItems().contains(j)){
-
+        bag.addItemToBag(item); //Add items to list of bags
+        item.Assign();
+        //Checks are now binary
+        if(item.isBinaryEqualsCheck()){ //Check to see if we have binary equals constraints (SAME BAG REQUIREMENT)
+            for (int i = 0; i < item.getBinaryEquals().size(); i++){ //Iterate over each of the binary equals constraints
+                for (int j = 0; j < allVariables.size(); j++){ //Iterate over the variables present
+                    if(allVariables.get(j).getName().equals(item.getBinaryEquals().get(i))){ //Get the binary equals requirement
+                        boolean temp = true;
+                        if (bag.getStoredItems().contains(allVariables.get(j))){ //If it actually satisfies the requirement
+                            temp = false;
                         }
-                        else if(canAdd(weight + item.getWeight(), itemAmount +1, bag,Items.get(j), check) == false){
-                            return false;
+                        if (temp) {
+                            boolean result = tempLinkedList.addAll(validityCheck(bag, allVariables.get(j), itemAmount + 1, allVariables, allBags, addedAlready)); //Add all elements it creates
+                            if(!result) { //It actually failed
+                                System.out.println("A binary equals condition is present between " + item.getName() + " and " + allVariables.get(j) + ". However, there is not enough space to accommodate both.");
+                                bag.removeFromBag(item);
+                                item.deAssign();
+                                return null;
+                            }
                         }
                     }
                 }
             }
         }
 
-        if(item.isBinaryNotEqualsCheck()){
-            for (int i = 0; i < item.getBinaryNotEquals().size(); i++){
-                for (int j = 0; j < Items.size(); j++){
-                    if(Items.get(j).getName().equals(item.getBinaryNotEquals().get(i))){
-                        if(bag.getStoredItems().contains(j)){
-                            return false;
+        //Binary not equals
+        if(item.isBinaryNotEqualsCheck()){ //Check to see if we have any binary not equals constrainst (NOT SAME BAG REQUIREMENT)
+            for (int i = 0; i < item.getBinaryNotEquals().size(); i++){ //Iterate over each of the binary not equals constraints
+                for (int j = 0; j < allVariables.size(); j++){ //Iterate over the variables present
+                    if(allVariables.get(j).getName().equals(item.getBinaryNotEquals().get(i))){ //Get the binary not equal
+                        if(bag.getStoredItems().contains(allVariables.get(j))){
+                            System.out.println("A binary not equals condition is present between " + item.getName() + " and " + allVariables.get(j) + ". However, the latter is already in the bag.");
+                            bag.removeFromBag(item);
+                            item.deAssign();
+                            return null;
                         }
                     }
                 }
             }
         }
-
-        for(int i = 0; i < item.getMutualInclusive().size(); i++){
+        //Mutual inclusive, seems to loop back indefinitely
+        for(int i = 0; i < item.getMutualInclusive().size(); i++){ //Check to see if any mutually inclusive dependencies
             if(item.getMutualInclusive().get(i).ifThisBag.equals(bag.getName())){
                 int it = 0;
                 int ba = 0;
-                for (int j = 0; j < Items.size(); j++){
-                    if(Items.get(j).getName().equals(item.getMutualInclusive().get(i).thenThatItem)){
+                for (int j = 0; j < allVariables.size(); j++){
+                    if(allVariables.get(j).getName().equals(item.getMutualInclusive().get(i).thenThatItem)){
                         it = j;
                     }
                 }
-                for (int j = 0; j < Bags.size(); j++){
-                    if(Bags.get(j).getName().equals(item.getMutualInclusive().get(i).inThatBag)){
+                for (int j = 0; j < allBags.size(); j++){
+                    if(allBags.get(j).getName().equals(item.getMutualInclusive().get(i).inThatBag)){
                         ba = j;
                     }
                 }
-                for (int j = 0; j < Items.size(); j++){
-                    if(Items.get(j).getName().equals(item.getMutualInclusive().get(i).thenThatItem)){
+                for (int j = 0; j < allVariables.size(); j++){
+                    if(allVariables.get(j).getName().equals(item.getMutualInclusive().get(i).thenThatItem)){
                         it = j;
                     }
                 }
-                if(Bags.get(ba).getStoredItems().contains(Items.get(it))){
-
+                boolean newTemp = true;
+                if(allBags.get(ba).getStoredItems().contains(allVariables.get(it))){
+                    newTemp = false;
                 }
-                else if(canAdd(weight + item.getWeight(), itemAmount + 1, Bags.get(ba),Items.get(it), check) == false){
-                    return false;
+
+                if (newTemp){
+                    boolean result = tempLinkedList.addAll(validityCheck(allBags.get(ba), allVariables.get(it), itemAmount + 1, allVariables, allBags, addedAlready));
+                    if (!result) {
+                        System.out.println("A mutual inclusive condition is present between " + item.getName() + " at bag " + bag.getName() + " and " + allVariables.get(it).getName() + " at bag " + allBags.get(ba).getName() + ".");
+                        bag.removeFromBag(item);
+                        item.deAssign();
+                        return null;
+                    }
                 }
             }
         }
 
-        if(check) {
-            tempVariables.add(item); //Add item to list of temporarily added things
-        }
-        bag.addItemToBag(item); //Add items to list of bags
+        return tempLinkedList;
+    }
 
-        if(check) {
-            tempBags.add(bag);
+    public List<Variables> duplicateListOfVariables(List<Variables> initialVars) {
+        List<Variables> tempVars = new LinkedList<Variables>();
+        for (Variables x : initialVars){
+            tempVars.add(x.duplicateItem());
         }
-        item.Assign();
-        System.out.println("True");
-        return true;
+        return tempVars;
+    }
+
+    public List<Domain> duplicateListOfBags(List<Domain> initialBags) {
+        List<Domain> tempBags =  new LinkedList<Domain>();
+        for (Domain y : initialBags) {
+            tempBags.add(y.duplicateBag());
+        }
+        return tempBags;
     }
 
     public void clearCheckingBags(){
-        for(int i = 0; i < tempVariables.size(); i++){
-            for(int j = 0; j < tempBags.size(); j++){
-                if(tempBags.get(j).getStoredItems().contains(tempVariables.get(i))){
+        for (int i = 0; i < tempVariables.size(); i++){
+            for (int j = 0; j < tempBags.size(); j++){
+                if (tempBags.get(j).getStoredItems().contains(tempVariables.get(i))){
                     tempVariables.get(i).deAssign();
                     tempBags.get(j).removeFromBag(tempVariables.get(i));
-
                 }
             }
         }
@@ -361,12 +394,17 @@ public class CSP {
         tempVariables.clear();
         tempBags.clear();
     }
-
+    //This needs to be adapted
     public LinkedList<Domain> getPossibleBags(Variables item){
         LinkedList<Domain> tempList = new LinkedList<Domain>();
-        for(int i = 0; i < Bags.size(); i++){
-            Domain tempBag= Bags.get(i);
-            if(canAdd(tempBag.getTotalWeight(),tempBag.getTotalItems(),tempBag,item,true)){
+        LinkedList<Variables> dupItems;
+        LinkedList<Domain> dupBags;
+        for (int i = 0; i < Bags.size(); i++){
+            Domain tempBag = Bags.get(i);
+            List<Variables> allVariables = duplicateListOfVariables(Items);
+            List<Domain> allBags = duplicateListOfBags(Bags);
+            List<Variables> tempVars = new LinkedList<Variables>();
+            if (validityCheck(tempBag, item, 1, allVariables, allBags, tempVars) != null){ //Is this right?
                 clearCheckingBags();
                 tempList.add(tempBag);
             }
@@ -443,9 +481,10 @@ public class CSP {
     }
 
     // we might need another validity checking function in order for this to work, this could also be written wrong
+    //Problem is that if something doesn't work, it only removes one thing
     public LinkedList<Domain> backtrackForward() {
-//using this for now need to change to better heuristic
-           Variables i = minimumRemainingValues();
+        //using this for now need to change to better heuristic
+        Variables i = minimumRemainingValues();
 
         if(i == null) {
             return new LinkedList<Domain>();
@@ -458,20 +497,18 @@ public class CSP {
 
         // iterating over list of possible bags
         for(int j = 0; j < orderedBags.size(); j++) {
-
-
-            if(canAdd(orderedBags.get(j).getTotalWeight(),orderedBags.get(j).getTotalItems(),orderedBags.get(j),i,true)) {
+            if(validityCheck(orderedBags.get(j), orderedBags.get(j).getTotalWeight(),orderedBags.get(j).getTotalItems(),orderedBags.get(j),i,false)) {//Fix this
                 //clearCheckingBags();
                 //orderedBags.get(j).addItemToBag(i);
                 //i.Assign();
                 // Recursive call
                 LinkedList<Domain> results = backtrackForward();
 
-                if(results == null) {
+                if(results == null) { //Improper results
                     clearCheckingBags();
                 }
             }
-            else {
+            else { //Improper results
                 clearCheckingBags();
             }
         }
